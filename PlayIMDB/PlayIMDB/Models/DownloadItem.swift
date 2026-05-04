@@ -12,6 +12,8 @@ struct DownloadItem: Identifiable, Codable {
     let title: String
     let posterURL: String?
     var fileURL: String?
+    var subtitleURL: String?
+    var subtitleLanguage: String?
     var progress: Double
     var status: DownloadStatus
     var downloadDate: Date?
@@ -20,6 +22,11 @@ struct DownloadItem: Identifiable, Codable {
     var localFileURL: URL? {
         guard let fileURL else { return nil }
         return URL(fileURLWithPath: fileURL)
+    }
+
+    var localSubtitleURL: URL? {
+        guard let subtitleURL else { return nil }
+        return URL(fileURLWithPath: subtitleURL)
     }
 
     var fileSizeText: String {

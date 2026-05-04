@@ -21,7 +21,7 @@ final class DownloadManager: NSObject, ObservableObject {
         loadDownloads()
     }
 
-    func startDownload(videoURL: String, imdbID: String, title: String, posterURL: String?) {
+    func startDownload(videoURL: String, imdbID: String, title: String, posterURL: String?, subtitlePath: String? = nil, subtitleLanguage: String? = nil) {
         guard !downloads.contains(where: { $0.imdbID == imdbID && $0.status == .downloading }) else { return }
 
         downloads.removeAll { $0.imdbID == imdbID && $0.status == .failed }
@@ -34,6 +34,8 @@ final class DownloadManager: NSObject, ObservableObject {
             title: title,
             posterURL: posterURL,
             fileURL: nil,
+            subtitleURL: subtitlePath,
+            subtitleLanguage: subtitleLanguage,
             progress: 0,
             status: .downloading,
             downloadDate: nil,
@@ -53,17 +55,13 @@ final class DownloadManager: NSObject, ObservableObject {
         if let fileURL = item.localFileURL {
             try? FileManager.default.removeItem(at: fileURL)
         }
+        if let subURL = item.localSubtitleURL {
+            try? FileManager.default.removeItem(at: subURL)
+        }
         downloads.removeAll { $0.id == item.id }
         activeTasks[item.id]?.cancel()
         activeTasks.removeValue(forKey: item.id)
         saveDownloads()
-    }
-
-    private func downloadsDirectory() -> URL {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let dir = docs.appendingPathComponent("Downloads", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
     }
 
     private func saveDownloads() {

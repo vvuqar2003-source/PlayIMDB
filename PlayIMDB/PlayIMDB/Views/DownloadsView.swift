@@ -86,6 +86,15 @@ struct DownloadRow: View {
                         Text(item.fileSizeText)
                             .font(.caption)
                             .foregroundColor(.gray)
+                        if let lang = item.subtitleLanguage {
+                            HStack(spacing: 2) {
+                                Image(systemName: "captions.bubble.fill")
+                                    .font(.caption2)
+                                Text(lang)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(Color("AccentColor"))
+                        }
                         if let date = item.downloadDate {
                             Text(date, style: .date)
                                 .font(.caption)

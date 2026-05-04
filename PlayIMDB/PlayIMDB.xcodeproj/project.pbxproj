@@ -28,6 +28,7 @@
 		B100002100000000000000 /* WatchHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002100000000000000 /* WatchHistoryManager.swift */; };
 		B100002200000000000000 /* WatchHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002200000000000000 /* WatchHistoryView.swift */; };
 		B100002300000000000000 /* VideoStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002300000000000000 /* VideoStreamService.swift */; };
+		B100002400000000000000 /* SubtitleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002400000000000000 /* SubtitleService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		A100002100000000000000 /* WatchHistoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryManager.swift; sourceTree = "<group>"; };
 		A100002200000000000000 /* WatchHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryView.swift; sourceTree = "<group>"; };
 		A100002300000000000000 /* VideoStreamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoStreamService.swift; sourceTree = "<group>"; };
+		A100002400000000000000 /* SubtitleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +108,7 @@
 				A100000500000000000000 /* DownloadManager.swift */,
 				A100002100000000000000 /* WatchHistoryManager.swift */,
 				A100002300000000000000 /* VideoStreamService.swift */,
+				A100002400000000000000 /* SubtitleService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -233,6 +236,7 @@
 				B100002100000000000000 /* WatchHistoryManager.swift in Sources */,
 				B100002200000000000000 /* WatchHistoryView.swift in Sources */,
 				B100002300000000000000 /* VideoStreamService.swift in Sources */,
+				B100002400000000000000 /* SubtitleService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
