@@ -1,5 +1,4 @@
 import Foundation
-import AVFoundation
 
 @MainActor
 final class DownloadManager: NSObject, ObservableObject {
@@ -7,38 +6,16 @@ final class DownloadManager: NSObject, ObservableObject {
 
     @Published var downloads: [DownloadItem] = []
 
-    private var hlsSession: AVAssetDownloadURLSession!
-    private var activeTasks: [String: AVAggregateAssetDownloadTask] = [:]
-    private var regularSession: URLSession!
-    private var regularTasks: [String: URLSessionDownloadTask] = [:]
-
+    private var activeDownloads: [String: Task<Void, Never>] = [:]
     private let saveKey = "PlayIMDB_Downloads"
 
     private override init() {
         super.init()
-
-        // HLS download session
-        let hlsConfig = URLSessionConfiguration.background(withIdentifier: "com.playimdb.hls")
-        hlsConfig.isDiscretionary = false
-        hlsConfig.sessionSendsLaunchEvents = true
-        hlsSession = AVAssetDownloadURLSession(
-            configuration: hlsConfig,
-            assetDownloadDelegate: self,
-            delegateQueue: OperationQueue.main
-        )
-
-        // Regular download session for direct mp4
-        let regConfig = URLSessionConfiguration.background(withIdentifier: "com.playimdb.download")
-        regConfig.isDiscretionary = false
-        regularSession = URLSession(configuration: regConfig, delegate: self, delegateQueue: nil)
-
         loadDownloads()
     }
 
     func startDownload(videoURL: String, imdbID: String, title: String, posterURL: String?, subtitlePath: String? = nil, subtitleLanguage: String? = nil) {
         guard !downloads.contains(where: { $0.imdbID == imdbID && $0.status == .downloading }) else { return }
-
-        // Remove previous failed
         downloads.removeAll { $0.imdbID == imdbID && $0.status == .failed }
 
         let item = DownloadItem(
@@ -58,22 +35,18 @@ final class DownloadManager: NSObject, ObservableObject {
         downloads.insert(item, at: 0)
         saveDownloads()
 
-        let lowered = videoURL.lowercased()
-        if lowered.contains(".m3u8") || lowered.contains("master.m3u8") || lowered.contains("index.m3u8") || lowered.contains("list.m3u8") {
-            startHLSDownload(url: videoURL, itemID: item.id, title: title)
-        } else {
-            startDirectDownload(url: videoURL, itemID: item.id)
+        let task = Task {
+            await downloadHLS(itemID: item.id, masterURL: videoURL)
         }
+        activeDownloads[item.id] = task
     }
 
     func cancelDownload(_ item: DownloadItem) {
-        activeTasks[item.id]?.cancel()
-        activeTasks.removeValue(forKey: item.id)
-        regularTasks[item.id]?.cancel()
-        regularTasks.removeValue(forKey: item.id)
-
+        activeDownloads[item.id]?.cancel()
+        activeDownloads.removeValue(forKey: item.id)
         if let index = downloads.firstIndex(where: { $0.id == item.id }) {
             downloads[index].status = .failed
+            downloads[index].progress = 0
         }
         saveDownloads()
     }
@@ -92,49 +65,140 @@ final class DownloadManager: NSObject, ObservableObject {
 
     func clearCompleted() {
         let completed = downloads.filter { $0.status == .completed }
-        for item in completed {
-            deleteDownload(item)
-        }
+        for item in completed { deleteDownload(item) }
     }
 
     func clearAll() {
-        let all = downloads
-        for item in all {
-            deleteDownload(item)
-        }
+        for item in downloads { deleteDownload(item) }
     }
 
-    // MARK: - HLS Download
+    // MARK: - HLS Segment Download
 
-    private func startHLSDownload(url: String, itemID: String, title: String) {
-        guard let videoURL = URL(string: url) else { return }
-        let asset = AVURLAsset(url: videoURL)
+    private func downloadHLS(itemID: String, masterURL: String) async {
+        let session = URLSession.shared
 
-        guard let task = hlsSession.aggregateAssetDownloadTask(
-            with: asset,
-            mediaSelections: [asset.preferredMediaSelection],
-            assetTitle: title,
-            assetArtworkData: nil,
-            options: [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: 0]
-        ) else {
-            // Fallback to direct download
-            startDirectDownload(url: url, itemID: itemID)
-            return
+        do {
+            // 1. Fetch master m3u8
+            guard let masterU = URL(string: masterURL) else { throw URLError(.badURL) }
+            var req = URLRequest(url: masterU)
+            req.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+            let (masterData, _) = try await session.data(for: req)
+            let masterContent = String(data: masterData, encoding: .utf8) ?? ""
+
+            guard !Task.isCancelled else { return }
+
+            // 2. Parse master — get best quality index URL
+            let masterLines = masterContent.components(separatedBy: "\n")
+            let indexLines = masterLines.filter { $0.contains("index.m3u8") || $0.contains("list.m3u8") }
+            guard let bestIndex = indexLines.last else { throw URLError(.badURL) }
+
+            // Build full URL
+            guard let parsed = URLComponents(string: masterURL) else { throw URLError(.badURL) }
+            let domain = "\(parsed.scheme ?? "https")://\(parsed.host ?? "")"
+            let fullIndexURL: String
+            if bestIndex.hasPrefix("http") {
+                fullIndexURL = bestIndex
+            } else {
+                fullIndexURL = domain + bestIndex
+            }
+
+            // 3. Fetch index m3u8 — get segment list
+            guard let indexU = URL(string: fullIndexURL) else { throw URLError(.badURL) }
+            var req2 = URLRequest(url: indexU)
+            req2.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+            let (indexData, _) = try await session.data(for: req2)
+            let indexContent = String(data: indexData, encoding: .utf8) ?? ""
+
+            let segments = indexContent.components(separatedBy: "\n")
+                .filter { !$0.hasPrefix("#") && !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+
+            guard !segments.isEmpty else { throw URLError(.badURL) }
+            guard !Task.isCancelled else { return }
+
+            // 4. Prepare destination file
+            let destDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Downloads", isDirectory: true)
+            try? FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
+            let destFile = destDir.appendingPathComponent("\(itemID).mp4")
+            FileManager.default.createFile(atPath: destFile.path, contents: nil)
+            let fileHandle = try FileHandle(forWritingTo: destFile)
+            defer { try? fileHandle.close() }
+
+            // 5. Download segments one by one
+            let totalSegments = segments.count
+            for (i, segURL) in segments.enumerated() {
+                guard !Task.isCancelled else {
+                    try? fileHandle.close()
+                    try? FileManager.default.removeItem(at: destFile)
+                    return
+                }
+
+                let fullSegURL: String
+                if segURL.hasPrefix("http") {
+                    fullSegURL = segURL
+                } else {
+                    fullSegURL = domain + segURL
+                }
+
+                guard let segU = URL(string: fullSegURL) else { continue }
+
+                var segReq = URLRequest(url: segU)
+                segReq.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+
+                // Retry up to 3 times per segment
+                var segData: Data?
+                for attempt in 0..<3 {
+                    do {
+                        let (data, _) = try await session.data(for: segReq)
+                        if data.count > 0 {
+                            segData = data
+                            break
+                        }
+                    } catch {
+                        if attempt < 2 {
+                            try? await Task.sleep(nanoseconds: 1_000_000_000)
+                        }
+                    }
+                }
+
+                if let data = segData {
+                    fileHandle.seekToEndOfFile()
+                    fileHandle.write(data)
+                }
+
+                // Update progress
+                let progress = Double(i + 1) / Double(totalSegments)
+                await MainActor.run {
+                    if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
+                        self.downloads[index].progress = progress
+                    }
+                }
+            }
+
+            // 6. Done — update status
+            try? fileHandle.close()
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: destFile.path)[.size] as? Int64) ?? 0
+
+            await MainActor.run {
+                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
+                    self.downloads[index].status = .completed
+                    self.downloads[index].fileURL = destFile.path
+                    self.downloads[index].downloadDate = Date()
+                    self.downloads[index].fileSize = fileSize
+                    self.downloads[index].progress = 1.0
+                    self.activeDownloads.removeValue(forKey: itemID)
+                    self.saveDownloads()
+                }
+            }
+        } catch {
+            await MainActor.run {
+                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
+                    self.downloads[index].status = .failed
+                    self.activeDownloads.removeValue(forKey: itemID)
+                    self.saveDownloads()
+                }
+            }
         }
-
-        task.taskDescription = itemID
-        activeTasks[itemID] = task
-        task.resume()
-    }
-
-    // MARK: - Direct Download (mp4 fallback)
-
-    private func startDirectDownload(url: String, itemID: String) {
-        guard let videoURL = URL(string: url) else { return }
-        let task = regularSession.downloadTask(with: videoURL)
-        task.taskDescription = itemID
-        regularTasks[itemID] = task
-        task.resume()
     }
 
     // MARK: - Persistence
@@ -148,145 +212,11 @@ final class DownloadManager: NSObject, ObservableObject {
         guard let data = UserDefaults.standard.data(forKey: saveKey),
               let items = try? JSONDecoder().decode([DownloadItem].self, from: data) else { return }
         downloads = items
-        // Reset any stuck downloading items
         for i in downloads.indices {
             if downloads[i].status == .downloading {
                 downloads[i].status = .failed
             }
         }
         saveDownloads()
-    }
-}
-
-// MARK: - AVAssetDownloadDelegate (HLS)
-
-extension DownloadManager: AVAssetDownloadDelegate {
-    func urlSession(_ session: URLSession, aggregateAssetDownloadTask: AVAggregateAssetDownloadTask, willDownloadTo location: URL) {
-        let itemID = aggregateAssetDownloadTask.taskDescription ?? ""
-        Task { @MainActor in
-            if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                self.downloads[index].fileURL = location.relativePath
-            }
-        }
-    }
-
-    func urlSession(_ session: URLSession, aggregateAssetDownloadTask: AVAggregateAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
-        let itemID = aggregateAssetDownloadTask.taskDescription ?? ""
-
-        var totalLoaded: Double = 0
-        for value in loadedTimeRanges {
-            let loaded = value.timeRangeValue
-            totalLoaded += CMTimeGetSeconds(loaded.duration)
-        }
-        let expected = CMTimeGetSeconds(timeRangeExpectedToLoad.duration)
-        let progress = expected > 0 ? min(totalLoaded / expected, 1.0) : 0
-
-        Task { @MainActor in
-            if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                self.downloads[index].progress = progress
-            }
-        }
-    }
-
-    func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
-        let itemID = assetDownloadTask.taskDescription ?? ""
-        Task { @MainActor in
-            if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                self.downloads[index].fileURL = location.relativePath
-            }
-        }
-    }
-
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        let itemID = task.taskDescription ?? ""
-
-        if let _ = task as? AVAggregateAssetDownloadTask {
-            Task { @MainActor in
-                self.activeTasks.removeValue(forKey: itemID)
-                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                    if let error = error as? NSError, error.code != NSURLErrorCancelled {
-                        self.downloads[index].status = .failed
-                    } else if error == nil {
-                        self.downloads[index].status = .completed
-                        self.downloads[index].downloadDate = Date()
-                        self.downloads[index].progress = 1.0
-                        // Calculate file size
-                        if let path = self.downloads[index].fileURL {
-                            let url = URL(fileURLWithPath: NSHomeDirectory() + "/" + path)
-                            let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
-                            self.downloads[index].fileSize = size
-                        }
-                    }
-                    self.saveDownloads()
-                }
-            }
-            return
-        }
-
-        // Regular download task completion
-        if let _ = task as? URLSessionDownloadTask {
-            guard let error else { return }
-            Task { @MainActor in
-                self.regularTasks.removeValue(forKey: itemID)
-                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                    if (error as NSError).code != NSURLErrorCancelled {
-                        self.downloads[index].status = .failed
-                    }
-                    self.saveDownloads()
-                }
-            }
-        }
-    }
-}
-
-// MARK: - URLSessionDownloadDelegate (Direct mp4)
-
-extension DownloadManager: URLSessionDownloadDelegate {
-    nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        guard let itemID = downloadTask.taskDescription else { return }
-
-        let destinationDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Downloads", isDirectory: true)
-        try? FileManager.default.createDirectory(at: destinationDir, withIntermediateDirectories: true)
-
-        let fileName = "\(itemID).mp4"
-        let destinationURL = destinationDir.appendingPathComponent(fileName)
-        try? FileManager.default.removeItem(at: destinationURL)
-
-        do {
-            try FileManager.default.moveItem(at: location, to: destinationURL)
-            let fileSize = (try? FileManager.default.attributesOfItem(atPath: destinationURL.path)[.size] as? Int64) ?? 0
-
-            Task { @MainActor in
-                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                    self.downloads[index].status = .completed
-                    self.downloads[index].fileURL = destinationURL.path
-                    self.downloads[index].downloadDate = Date()
-                    self.downloads[index].fileSize = fileSize
-                    self.downloads[index].progress = 1.0
-                    self.regularTasks.removeValue(forKey: itemID)
-                    self.saveDownloads()
-                }
-            }
-        } catch {
-            Task { @MainActor in
-                if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                    self.downloads[index].status = .failed
-                    self.regularTasks.removeValue(forKey: itemID)
-                    self.saveDownloads()
-                }
-            }
-        }
-    }
-
-    nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        guard let itemID = downloadTask.taskDescription else { return }
-        let progress = totalBytesExpectedToWrite > 0 ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite) : 0
-
-        Task { @MainActor in
-            if let index = self.downloads.firstIndex(where: { $0.id == itemID }) {
-                self.downloads[index].progress = progress
-            }
-        }
     }
 }
