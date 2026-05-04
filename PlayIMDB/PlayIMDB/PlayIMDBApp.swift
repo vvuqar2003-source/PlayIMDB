@@ -10,6 +10,11 @@ struct PlayIMDBApp: App {
                         Label("Kesfet", systemImage: "film")
                     }
 
+                WatchHistoryView()
+                    .tabItem {
+                        Label("Son Izlenenler", systemImage: "clock.arrow.circlepath")
+                    }
+
                 DownloadsView()
                     .tabItem {
                         Label("Indirilenler", systemImage: "arrow.down.circle")

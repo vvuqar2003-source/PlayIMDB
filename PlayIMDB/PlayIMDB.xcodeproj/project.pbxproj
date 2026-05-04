@@ -24,6 +24,9 @@
 		B100001500000000000000 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001500000000000000 /* DownloadsView.swift */; };
 		B100001600000000000000 /* OfflinePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001600000000000000 /* OfflinePlayerView.swift */; };
 		B100001700000000000000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100001700000000000000 /* Assets.xcassets */; };
+		B100002000000000000000 /* WatchHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002000000000000000 /* WatchHistoryItem.swift */; };
+		B100002100000000000000 /* WatchHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002100000000000000 /* WatchHistoryManager.swift */; };
+		B100002200000000000000 /* WatchHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002200000000000000 /* WatchHistoryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +49,9 @@
 		A100001700000000000000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A100001800000000000000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A100001900000000000000 /* PlayIMDB.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlayIMDB.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A100002000000000000000 /* WatchHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryItem.swift; sourceTree = "<group>"; };
+		A100002100000000000000 /* WatchHistoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryManager.swift; sourceTree = "<group>"; };
+		A100002200000000000000 /* WatchHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +92,7 @@
 			children = (
 				A100000200000000000000 /* IMDBItem.swift */,
 				A100000300000000000000 /* DownloadItem.swift */,
+				A100002000000000000000 /* WatchHistoryItem.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -95,6 +102,7 @@
 			children = (
 				A100000400000000000000 /* IMDBService.swift */,
 				A100000500000000000000 /* DownloadManager.swift */,
+				A100002100000000000000 /* WatchHistoryManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -120,6 +128,7 @@
 				A100001400000000000000 /* PlayerView.swift */,
 				A100001500000000000000 /* DownloadsView.swift */,
 				A100001600000000000000 /* OfflinePlayerView.swift */,
+				A100002200000000000000 /* WatchHistoryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -217,6 +226,9 @@
 				B100001400000000000000 /* PlayerView.swift in Sources */,
 				B100001500000000000000 /* DownloadsView.swift in Sources */,
 				B100001600000000000000 /* OfflinePlayerView.swift in Sources */,
+				B100002000000000000000 /* WatchHistoryItem.swift in Sources */,
+				B100002100000000000000 /* WatchHistoryManager.swift in Sources */,
+				B100002200000000000000 /* WatchHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
