@@ -55,7 +55,7 @@ struct PlayerView: View {
         .alert("Video Bulunamadi", isPresented: $showNoVideoAlert) {
             Button("Tamam", role: .cancel) {}
         } message: {
-            Text("Henuz video URL'si yakalanamadi. Videoyu oynatmaya baslayin ve tekrar deneyin.")
+            Text("Videoyu oynatmaya baslayin, ardindan tekrar indirme butonuna basin.")
         }
         .onAppear {
             historyManager.addToHistory(item: item)
@@ -78,49 +78,59 @@ struct PlayerWebView: UIViewRepresentable {
 
         let contentController = WKUserContentController()
 
+        // JS that runs in ALL frames (mainFrameOnly: false)
+        // This catches video elements in the main page AND inside iframes (same-origin only)
+        // For cross-origin iframes, we rely on network request interception
         let js = """
         (function() {
             var lastSent = '';
             function sendURL(src) {
-                if (src && src !== lastSent && (src.includes('.mp4') || src.includes('.m3u8') || src.includes('/video') || src.includes('blob:'))) {
+                if (!src || src === lastSent) return;
+                if (src.includes('.m3u8') || src.includes('.mp4') || src.includes('/playlist') || src.includes('/master') || src.includes('/video')) {
                     lastSent = src;
-                    window.webkit.messageHandlers.videoURL.postMessage(src);
+                    try { window.webkit.messageHandlers.videoURL.postMessage(src); } catch(e) {}
                 }
             }
 
-            // Watch for video elements
-            var observer = new MutationObserver(function(mutations) {
-                document.querySelectorAll('video, video source, iframe').forEach(function(el) {
-                    var src = el.src || el.getAttribute('src') || el.currentSrc;
-                    sendURL(src);
-                });
-            });
-            observer.observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
-
-            // Check immediately and periodically
+            // Monitor video elements
             function checkVideos() {
-                document.querySelectorAll('video, video source').forEach(function(el) {
-                    var src = el.src || el.getAttribute('src') || el.currentSrc;
-                    sendURL(src);
-                });
+                try {
+                    document.querySelectorAll('video, video source, iframe').forEach(function(el) {
+                        sendURL(el.src || el.getAttribute('src') || el.currentSrc || '');
+                    });
+                } catch(e) {}
             }
+
+            // MutationObserver for dynamic content
+            try {
+                var obs = new MutationObserver(function() { checkVideos(); });
+                obs.observe(document.documentElement || document.body || document, {
+                    childList: true, subtree: true, attributes: true, attributeFilter: ['src']
+                });
+            } catch(e) {}
+
+            // Intercept XMLHttpRequest
+            try {
+                var origOpen = XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open = function(method, url) {
+                    if (typeof url === 'string') sendURL(url);
+                    return origOpen.apply(this, arguments);
+                };
+            } catch(e) {}
+
+            // Intercept fetch
+            try {
+                var origFetch = window.fetch;
+                window.fetch = function(input) {
+                    var u = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+                    sendURL(u);
+                    return origFetch.apply(this, arguments);
+                };
+            } catch(e) {}
+
+            // Periodically check
             checkVideos();
-            setInterval(checkVideos, 2000);
-
-            // Intercept XHR for video URLs
-            var origOpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function(method, url) {
-                if (typeof url === 'string') { sendURL(url); }
-                return origOpen.apply(this, arguments);
-            };
-
-            // Intercept fetch for video URLs
-            var origFetch = window.fetch;
-            window.fetch = function(input) {
-                var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-                if (url) { sendURL(url); }
-                return origFetch.apply(this, arguments);
-            };
+            setInterval(checkVideos, 1500);
         })();
         """
 
@@ -129,6 +139,9 @@ struct PlayerWebView: UIViewRepresentable {
         contentController.add(context.coordinator, name: "videoURL")
 
         config.userContentController = contentController
+
+        // Allow all media types in iframes
+        config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
@@ -156,8 +169,43 @@ struct PlayerWebView: UIViewRepresentable {
             }
         }
 
+        // Intercept ALL navigation requests — this catches cross-origin iframe loads and video resource requests
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if let url = navigationAction.request.url?.absoluteString {
+                checkForVideoURL(url)
+            }
             decisionHandler(.allow)
+        }
+
+        // Intercept ALL responses — catches .m3u8 and .mp4 content types from any frame
+        func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+            if let url = navigationResponse.response.url?.absoluteString {
+                checkForVideoURL(url)
+            }
+
+            // Also check MIME type
+            if let mimeType = navigationResponse.response.mimeType {
+                if mimeType.contains("mpegurl") || mimeType.contains("mp4") || mimeType.contains("video") {
+                    if let url = navigationResponse.response.url?.absoluteString {
+                        DispatchQueue.main.async {
+                            self.onVideoURLCaptured(url)
+                        }
+                    }
+                }
+            }
+
+            decisionHandler(.allow)
+        }
+
+        private func checkForVideoURL(_ url: String) {
+            let lowered = url.lowercased()
+            if lowered.contains(".m3u8") || lowered.contains(".mp4") ||
+               lowered.contains("/playlist") || lowered.contains("/master.m3u8") ||
+               lowered.contains("mime=video") {
+                DispatchQueue.main.async {
+                    self.onVideoURLCaptured(url)
+                }
+            }
         }
     }
 }
