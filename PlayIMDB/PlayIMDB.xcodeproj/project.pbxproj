@@ -27,6 +27,7 @@
 		B100002000000000000000 /* WatchHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002000000000000000 /* WatchHistoryItem.swift */; };
 		B100002100000000000000 /* WatchHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002100000000000000 /* WatchHistoryManager.swift */; };
 		B100002200000000000000 /* WatchHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002200000000000000 /* WatchHistoryView.swift */; };
+		B100002300000000000000 /* VideoStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002300000000000000 /* VideoStreamService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		A100002000000000000000 /* WatchHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryItem.swift; sourceTree = "<group>"; };
 		A100002100000000000000 /* WatchHistoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryManager.swift; sourceTree = "<group>"; };
 		A100002200000000000000 /* WatchHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHistoryView.swift; sourceTree = "<group>"; };
+		A100002300000000000000 /* VideoStreamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoStreamService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 				A100000400000000000000 /* IMDBService.swift */,
 				A100000500000000000000 /* DownloadManager.swift */,
 				A100002100000000000000 /* WatchHistoryManager.swift */,
+				A100002300000000000000 /* VideoStreamService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -229,6 +232,7 @@
 				B100002000000000000000 /* WatchHistoryItem.swift in Sources */,
 				B100002100000000000000 /* WatchHistoryManager.swift in Sources */,
 				B100002200000000000000 /* WatchHistoryView.swift in Sources */,
+				B100002300000000000000 /* VideoStreamService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
