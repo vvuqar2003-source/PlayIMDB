@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var homeViewModel = HomeViewModel()
     @StateObject private var searchViewModel = SearchViewModel()
+    @State private var showPlayer = false
     @State private var selectedItem: IMDBItem?
 
     var body: some View {
@@ -11,6 +12,7 @@ struct ContentView: View {
                 if searchViewModel.query.isEmpty {
                     HomeView(viewModel: homeViewModel, onItemTap: { item in
                         selectedItem = item
+                        showPlayer = true
                     })
                 } else {
                     ScrollView {
@@ -32,6 +34,7 @@ struct ContentView: View {
                                 ForEach(searchViewModel.results) { item in
                                     SearchResultRow(item: item) {
                                         selectedItem = item
+                                        showPlayer = true
                                     }
                                 }
                             }
@@ -51,8 +54,10 @@ struct ContentView: View {
             .task {
                 await homeViewModel.loadContent()
             }
-            .navigationDestination(item: $selectedItem) { item in
-                PlayerView(item: item)
+            .navigationDestination(isPresented: $showPlayer) {
+                if let item = selectedItem {
+                    PlayerView(item: item)
+                }
             }
         }
     }
