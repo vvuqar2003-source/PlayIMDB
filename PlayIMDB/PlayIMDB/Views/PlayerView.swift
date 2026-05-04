@@ -75,73 +75,128 @@ struct PlayerWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         let contentController = WKUserContentController()
 
-        // JS that runs in ALL frames (mainFrameOnly: false)
-        // This catches video elements in the main page AND inside iframes (same-origin only)
-        // For cross-origin iframes, we rely on network request interception
+        // Comprehensive JS injection that:
+        // 1. Intercepts XMLHttpRequest and fetch for .m3u8/.mp4 URLs
+        // 2. Monitors HLS.js manifest loading by hooking Hls prototype
+        // 3. Watches video element src changes
+        // 4. Periodically scans for video elements
+        // Runs in ALL frames (mainFrameOnly: false) to catch iframe content
         let js = """
         (function() {
-            var lastSent = '';
-            function sendURL(src) {
-                if (!src || src === lastSent) return;
-                if (src.includes('.m3u8') || src.includes('.mp4') || src.includes('/playlist') || src.includes('/master') || src.includes('/video')) {
-                    lastSent = src;
+            var sent = {};
+            function send(src) {
+                if (!src || sent[src]) return;
+                var s = src.toLowerCase();
+                if (s.indexOf('.m3u8') !== -1 || s.indexOf('.mp4') !== -1 ||
+                    s.indexOf('master.m3u8') !== -1 || s.indexOf('index.m3u8') !== -1 ||
+                    s.indexOf('playlist') !== -1 || s.indexOf('/hls/') !== -1 ||
+                    s.indexOf('mime=video') !== -1 || s.indexOf('.ts') !== -1) {
+                    // Prefer m3u8 over ts segments
+                    if (s.indexOf('.ts') !== -1 && s.indexOf('.m3u8') === -1) return;
+                    sent[src] = true;
                     try { window.webkit.messageHandlers.videoURL.postMessage(src); } catch(e) {}
                 }
             }
 
-            // Monitor video elements
-            function checkVideos() {
-                try {
-                    document.querySelectorAll('video, video source, iframe').forEach(function(el) {
-                        sendURL(el.src || el.getAttribute('src') || el.currentSrc || '');
+            // 1. Intercept XMLHttpRequest
+            try {
+                var xhrOpen = XMLHttpRequest.prototype.open;
+                var xhrSend = XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.open = function(m, u) {
+                    this._url = u;
+                    if (typeof u === 'string') send(u);
+                    return xhrOpen.apply(this, arguments);
+                };
+                XMLHttpRequest.prototype.send = function() {
+                    var self = this;
+                    this.addEventListener('load', function() {
+                        try {
+                            if (self._url) send(self._url);
+                            // Check if response contains m3u8 URLs
+                            var t = self.responseText || '';
+                            var matches = t.match(/https?:\\/\\/[^\\s"']+\\.m3u8[^\\s"']*/gi);
+                            if (matches) { for (var i = 0; i < matches.length; i++) send(matches[i]); }
+                        } catch(e) {}
                     });
+                    return xhrSend.apply(this, arguments);
+                };
+            } catch(e) {}
+
+            // 2. Intercept fetch
+            try {
+                var origFetch = window.fetch;
+                window.fetch = function(input, init) {
+                    var u = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+                    if (u) send(u);
+                    return origFetch.apply(this, arguments).then(function(resp) {
+                        try {
+                            var url2 = resp.url || '';
+                            send(url2);
+                        } catch(e) {}
+                        return resp;
+                    });
+                };
+            } catch(e) {}
+
+            // 3. Hook HLS.js if loaded
+            function hookHls() {
+                try {
+                    if (window.Hls && !window.Hls._hooked) {
+                        window.Hls._hooked = true;
+                        var origLoad = window.Hls.prototype.loadSource;
+                        window.Hls.prototype.loadSource = function(src) {
+                            send(src);
+                            return origLoad.apply(this, arguments);
+                        };
+                    }
                 } catch(e) {}
             }
 
-            // MutationObserver for dynamic content
+            // 4. Monitor video elements
+            function checkVideos() {
+                try {
+                    document.querySelectorAll('video, video source').forEach(function(el) {
+                        send(el.src || el.getAttribute('src') || el.currentSrc || '');
+                    });
+                } catch(e) {}
+                hookHls();
+            }
+
+            // 5. MutationObserver
             try {
-                var obs = new MutationObserver(function() { checkVideos(); });
-                obs.observe(document.documentElement || document.body || document, {
-                    childList: true, subtree: true, attributes: true, attributeFilter: ['src']
-                });
+                new MutationObserver(function() { checkVideos(); }).observe(
+                    document.documentElement || document, {childList:true, subtree:true, attributes:true, attributeFilter:['src']}
+                );
             } catch(e) {}
 
-            // Intercept XMLHttpRequest
-            try {
-                var origOpen = XMLHttpRequest.prototype.open;
-                XMLHttpRequest.prototype.open = function(method, url) {
-                    if (typeof url === 'string') sendURL(url);
-                    return origOpen.apply(this, arguments);
-                };
-            } catch(e) {}
-
-            // Intercept fetch
-            try {
-                var origFetch = window.fetch;
-                window.fetch = function(input) {
-                    var u = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-                    sendURL(u);
-                    return origFetch.apply(this, arguments);
-                };
-            } catch(e) {}
-
-            // Periodically check
+            // 6. Periodic check
             checkVideos();
-            setInterval(checkVideos, 1500);
+            setInterval(checkVideos, 2000);
+
+            // 7. Listen for postMessage (some players communicate via postMessage)
+            window.addEventListener('message', function(e) {
+                try {
+                    var d = e.data;
+                    if (typeof d === 'string') send(d);
+                    if (typeof d === 'object' && d) {
+                        var vals = JSON.stringify(d);
+                        var m = vals.match(/https?:\\/\\/[^"]+\\.m3u8[^"]*/gi);
+                        if (m) { for (var i = 0; i < m.length; i++) send(m[i]); }
+                    }
+                } catch(e) {}
+            });
         })();
         """
 
-        let script = WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
+        let script = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         contentController.addUserScript(script)
         contentController.add(context.coordinator, name: "videoURL")
 
         config.userContentController = contentController
-
-        // Allow all media types in iframes
-        config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
@@ -156,6 +211,7 @@ struct PlayerWebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         let onVideoURLCaptured: (String) -> Void
+        private var bestURL: String?
 
         init(onVideoURLCaptured: @escaping (String) -> Void) {
             self.onVideoURLCaptured = onVideoURLCaptured
@@ -163,48 +219,47 @@ struct PlayerWebView: UIViewRepresentable {
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             if message.name == "videoURL", let urlString = message.body as? String {
+                let lower = urlString.lowercased()
+                // Prefer m3u8 master/index over other types
+                if lower.contains(".m3u8") {
+                    bestURL = urlString
+                } else if bestURL == nil && lower.contains(".mp4") {
+                    bestURL = urlString
+                }
                 DispatchQueue.main.async {
-                    self.onVideoURLCaptured(urlString)
+                    self.onVideoURLCaptured(self.bestURL ?? urlString)
                 }
             }
         }
 
-        // Intercept ALL navigation requests — this catches cross-origin iframe loads and video resource requests
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             if let url = navigationAction.request.url?.absoluteString {
-                checkForVideoURL(url)
+                checkURL(url)
             }
             decisionHandler(.allow)
         }
 
-        // Intercept ALL responses — catches .m3u8 and .mp4 content types from any frame
         func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
             if let url = navigationResponse.response.url?.absoluteString {
-                checkForVideoURL(url)
+                checkURL(url)
             }
-
-            // Also check MIME type
-            if let mimeType = navigationResponse.response.mimeType {
-                if mimeType.contains("mpegurl") || mimeType.contains("mp4") || mimeType.contains("video") {
+            if let mime = navigationResponse.response.mimeType?.lowercased() {
+                if mime.contains("mpegurl") || mime.contains("mp4") || mime.contains("video") {
                     if let url = navigationResponse.response.url?.absoluteString {
-                        DispatchQueue.main.async {
-                            self.onVideoURLCaptured(url)
-                        }
+                        bestURL = url
+                        DispatchQueue.main.async { self.onVideoURLCaptured(url) }
                     }
                 }
             }
-
             decisionHandler(.allow)
         }
 
-        private func checkForVideoURL(_ url: String) {
-            let lowered = url.lowercased()
-            if lowered.contains(".m3u8") || lowered.contains(".mp4") ||
-               lowered.contains("/playlist") || lowered.contains("/master.m3u8") ||
-               lowered.contains("mime=video") {
-                DispatchQueue.main.async {
-                    self.onVideoURLCaptured(url)
-                }
+        private func checkURL(_ url: String) {
+            let lower = url.lowercased()
+            if lower.contains(".m3u8") || lower.contains(".mp4") {
+                if lower.contains(".m3u8") { bestURL = url }
+                else if bestURL == nil { bestURL = url }
+                DispatchQueue.main.async { self.onVideoURLCaptured(self.bestURL ?? url) }
             }
         }
     }
