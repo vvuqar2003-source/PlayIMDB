@@ -1,0 +1,419 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B100000100000000000000 /* PlayIMDBApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000100000000000000 /* PlayIMDBApp.swift */; };
+		B100000200000000000000 /* IMDBItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000200000000000000 /* IMDBItem.swift */; };
+		B100000300000000000000 /* DownloadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000300000000000000 /* DownloadItem.swift */; };
+		B100000400000000000000 /* IMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000400000000000000 /* IMDBService.swift */; };
+		B100000500000000000000 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000500000000000000 /* DownloadManager.swift */; };
+		B100000600000000000000 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000600000000000000 /* HomeViewModel.swift */; };
+		B100000700000000000000 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000700000000000000 /* SearchViewModel.swift */; };
+		B100000800000000000000 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000800000000000000 /* ContentView.swift */; };
+		B100000900000000000000 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000900000000000000 /* HomeView.swift */; };
+		B100001000000000000000 /* HeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001000000000000000 /* HeroView.swift */; };
+		B100001100000000000000 /* CategoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001100000000000000 /* CategoryRow.swift */; };
+		B100001200000000000000 /* PosterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001200000000000000 /* PosterCard.swift */; };
+		B100001300000000000000 /* SearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001300000000000000 /* SearchResultRow.swift */; };
+		B100001400000000000000 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001400000000000000 /* PlayerView.swift */; };
+		B100001500000000000000 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001500000000000000 /* DownloadsView.swift */; };
+		B100001600000000000000 /* OfflinePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001600000000000000 /* OfflinePlayerView.swift */; };
+		B100001700000000000000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100001700000000000000 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A100000100000000000000 /* PlayIMDBApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayIMDBApp.swift; sourceTree = "<group>"; };
+		A100000200000000000000 /* IMDBItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMDBItem.swift; sourceTree = "<group>"; };
+		A100000300000000000000 /* DownloadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadItem.swift; sourceTree = "<group>"; };
+		A100000400000000000000 /* IMDBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMDBService.swift; sourceTree = "<group>"; };
+		A100000500000000000000 /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
+		A100000600000000000000 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		A100000700000000000000 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		A100000800000000000000 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A100000900000000000000 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A100001000000000000000 /* HeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroView.swift; sourceTree = "<group>"; };
+		A100001100000000000000 /* CategoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRow.swift; sourceTree = "<group>"; };
+		A100001200000000000000 /* PosterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PosterCard.swift; sourceTree = "<group>"; };
+		A100001300000000000000 /* SearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultRow.swift; sourceTree = "<group>"; };
+		A100001400000000000000 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		A100001500000000000000 /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
+		A100001600000000000000 /* OfflinePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflinePlayerView.swift; sourceTree = "<group>"; };
+		A100001700000000000000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A100001800000000000000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A100001900000000000000 /* PlayIMDB.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlayIMDB.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F100000100000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C100000100000000000000 = {
+			isa = PBXGroup;
+			children = (
+				C100000200000000000000 /* PlayIMDB */,
+				C100000900000000000000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C100000200000000000000 /* PlayIMDB */ = {
+			isa = PBXGroup;
+			children = (
+				A100000100000000000000 /* PlayIMDBApp.swift */,
+				C100000300000000000000 /* Models */,
+				C100000400000000000000 /* Services */,
+				C100000500000000000000 /* ViewModels */,
+				C100000600000000000000 /* Views */,
+				A100001700000000000000 /* Assets.xcassets */,
+				A100001800000000000000 /* Info.plist */,
+			);
+			path = PlayIMDB;
+			sourceTree = "<group>";
+		};
+		C100000300000000000000 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A100000200000000000000 /* IMDBItem.swift */,
+				A100000300000000000000 /* DownloadItem.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C100000400000000000000 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A100000400000000000000 /* IMDBService.swift */,
+				A100000500000000000000 /* DownloadManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C100000500000000000000 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A100000600000000000000 /* HomeViewModel.swift */,
+				A100000700000000000000 /* SearchViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		C100000600000000000000 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A100000800000000000000 /* ContentView.swift */,
+				A100000900000000000000 /* HomeView.swift */,
+				A100001000000000000000 /* HeroView.swift */,
+				A100001100000000000000 /* CategoryRow.swift */,
+				A100001200000000000000 /* PosterCard.swift */,
+				A100001300000000000000 /* SearchResultRow.swift */,
+				A100001400000000000000 /* PlayerView.swift */,
+				A100001500000000000000 /* DownloadsView.swift */,
+				A100001600000000000000 /* OfflinePlayerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C100000900000000000000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A100001900000000000000 /* PlayIMDB.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D100000100000000000000 /* PlayIMDB */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = H100000200000000000000 /* Build configuration list for PBXNativeTarget "PlayIMDB" */;
+			buildPhases = (
+				F100000200000000000000 /* Sources */,
+				F100000100000000000000 /* Frameworks */,
+				F100000300000000000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PlayIMDB;
+			productName = PlayIMDB;
+			productReference = A100001900000000000000 /* PlayIMDB.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E100000100000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					D100000100000000000000 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = H100000100000000000000 /* Build configuration list for PBXProject "PlayIMDB" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = tr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				tr,
+				Base,
+			);
+			mainGroup = C100000100000000000000;
+			productRefGroup = C100000900000000000000 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D100000100000000000000 /* PlayIMDB */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F100000300000000000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B100001700000000000000 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F100000200000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B100000100000000000000 /* PlayIMDBApp.swift in Sources */,
+				B100000200000000000000 /* IMDBItem.swift in Sources */,
+				B100000300000000000000 /* DownloadItem.swift in Sources */,
+				B100000400000000000000 /* IMDBService.swift in Sources */,
+				B100000500000000000000 /* DownloadManager.swift in Sources */,
+				B100000600000000000000 /* HomeViewModel.swift in Sources */,
+				B100000700000000000000 /* SearchViewModel.swift in Sources */,
+				B100000800000000000000 /* ContentView.swift in Sources */,
+				B100000900000000000000 /* HomeView.swift in Sources */,
+				B100001000000000000000 /* HeroView.swift in Sources */,
+				B100001100000000000000 /* CategoryRow.swift in Sources */,
+				B100001200000000000000 /* PosterCard.swift in Sources */,
+				B100001300000000000000 /* SearchResultRow.swift in Sources */,
+				B100001400000000000000 /* PlayerView.swift in Sources */,
+				B100001500000000000000 /* DownloadsView.swift in Sources */,
+				B100001600000000000000 /* OfflinePlayerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		G100000100000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		G100000200000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		G100000300000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlayIMDB/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.playimdb.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Debug;
+		};
+		G100000400000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlayIMDB/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.playimdb.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		H100000100000000000000 /* Build configuration list for PBXProject "PlayIMDB" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				G100000100000000000000 /* Debug */,
+				G100000200000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		H100000200000000000000 /* Build configuration list for PBXNativeTarget "PlayIMDB" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				G100000300000000000000 /* Debug */,
+				G100000400000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E100000100000000000000 /* Project object */;
+}
