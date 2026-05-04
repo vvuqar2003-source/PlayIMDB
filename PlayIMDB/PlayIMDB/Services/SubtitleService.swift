@@ -6,19 +6,49 @@ final class SubtitleService {
 
     private let session = URLSession.shared
 
-    struct SubtitleResult: Codable, Identifiable {
+    struct SubtitleResult: Codable, Identifiable, Hashable {
         let SubLanguageID: String
         let SubFileName: String
         let SubDownloadLink: String
         let LanguageName: String
         let ISO639: String?
         let SubFormat: String?
+        let SubRating: String?
+        let SubDownloadsCnt: String?
+        let MatchedBy: String?
+        let MovieReleaseName: String?
 
         var id: String { SubDownloadLink }
         var displayName: String { LanguageName }
+        var rating: Double { Double(SubRating ?? "0") ?? 0 }
+        var downloadCount: Int { Int(SubDownloadsCnt ?? "0") ?? 0 }
+        var releaseName: String { MovieReleaseName ?? SubFileName }
+
+        var compatibilityScore: String {
+            if rating >= 8 { return "Mukemmel" }
+            if rating >= 6 { return "Iyi" }
+            if rating >= 4 { return "Orta" }
+            if downloadCount > 10000 { return "Populer" }
+            return "Normal"
+        }
+
+        var compatibilityColor: String {
+            if rating >= 8 { return "green" }
+            if rating >= 6 { return "yellow" }
+            return "gray"
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
+
+        static func == (lhs: SubtitleResult, rhs: SubtitleResult) -> Bool {
+            lhs.id == rhs.id
+        }
     }
 
-    func fetchSubtitles(imdbID: String, language: String = "all") async -> [SubtitleResult] {
+    /// Fetch ALL subtitles for a given IMDB ID (no dedup — show all per language)
+    func fetchAllSubtitles(imdbID: String, language: String = "all") async -> [SubtitleResult] {
         let numericID = imdbID.replacingOccurrences(of: "tt", with: "")
         let langPath = language == "all" ? "" : "/sublanguageid-\(language)"
         let urlString = "https://rest.opensubtitles.org/search/imdbid-\(numericID)\(langPath)"
@@ -31,18 +61,26 @@ final class SubtitleService {
         do {
             let (data, _) = try await session.data(for: request)
             let results = try JSONDecoder().decode([SubtitleResult].self, from: data)
-            var seen: Set<String> = []
-            var unique: [SubtitleResult] = []
-            for sub in results {
-                if !seen.contains(sub.SubLanguageID) {
-                    seen.insert(sub.SubLanguageID)
-                    unique.append(sub)
-                }
-            }
-            return unique
+            return results
         } catch {
             return []
         }
+    }
+
+    /// Fetch subtitles deduped by language (one per language, best rated)
+    func fetchSubtitles(imdbID: String, language: String = "all") async -> [SubtitleResult] {
+        let all = await fetchAllSubtitles(imdbID: imdbID, language: language)
+        var seen: Set<String> = []
+        var unique: [SubtitleResult] = []
+        // Sort by rating first so we keep the best
+        let sorted = all.sorted { $0.rating > $1.rating }
+        for sub in sorted {
+            if !seen.contains(sub.SubLanguageID) {
+                seen.insert(sub.SubLanguageID)
+                unique.append(sub)
+            }
+        }
+        return unique
     }
 
     func downloadSubtitle(sub: SubtitleResult) async -> String? {
@@ -50,13 +88,10 @@ final class SubtitleService {
 
         var request = URLRequest(url: url)
         request.setValue("TemporaryUserAgent", forHTTPHeaderField: "User-Agent")
-        request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
 
         do {
-            let (data, response) = try await session.data(for: request)
+            let (data, _) = try await session.data(for: request)
 
-            // URLSession automatically decompresses gzip when Accept-Encoding is set
-            // But OpenSubtitles returns .gz file, so we might need manual handling
             if let text = String(data: data, encoding: .utf8), text.contains("-->") {
                 return text
             }
@@ -64,12 +99,13 @@ final class SubtitleService {
                 return text
             }
 
-            // Try NSData decompression (available on iOS 13+)
-            let decompressed = try (data as NSData).decompressed(using: .zlib)
-            if let text = String(data: decompressed as Data, encoding: .utf8) {
-                return text
+            // Try decompression
+            if let decompressed = try? (data as NSData).decompressed(using: .zlib) as Data {
+                if let text = String(data: decompressed, encoding: .utf8) { return text }
+                return String(data: decompressed, encoding: .isoLatin1)
             }
-            return String(data: decompressed as Data, encoding: .isoLatin1)
+
+            return nil
         } catch {
             return nil
         }

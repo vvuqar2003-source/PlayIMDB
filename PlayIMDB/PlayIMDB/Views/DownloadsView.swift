@@ -3,6 +3,7 @@ import SwiftUI
 struct DownloadsView: View {
     @StateObject private var downloadManager = DownloadManager.shared
     @State private var selectedItem: DownloadItem?
+    @State private var showClearAlert = false
 
     var body: some View {
         NavigationStack {
@@ -24,14 +25,16 @@ struct DownloadsView: View {
                 } else {
                     List {
                         ForEach(downloadManager.downloads) { item in
-                            DownloadRow(item: item)
-                                .onTapGesture {
-                                    if item.status == .completed {
-                                        selectedItem = item
-                                    }
+                            DownloadRow(item: item, onCancel: {
+                                downloadManager.cancelDownload(item)
+                            })
+                            .onTapGesture {
+                                if item.status == .completed {
+                                    selectedItem = item
                                 }
-                                .listRowBackground(Color.black)
-                                .listRowSeparatorTint(.gray.opacity(0.3))
+                            }
+                            .listRowBackground(Color.black)
+                            .listRowSeparatorTint(.gray.opacity(0.3))
                         }
                         .onDelete { indexSet in
                             for index in indexSet {
@@ -45,6 +48,36 @@ struct DownloadsView: View {
             .navigationTitle("Indirilenler")
             .background(Color.black)
             .scrollContentBackground(.hidden)
+            .toolbar {
+                if !downloadManager.downloads.isEmpty {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button(role: .destructive) {
+                                showClearAlert = true
+                            } label: {
+                                Label("Tumu Temizle", systemImage: "trash")
+                            }
+
+                            Button {
+                                downloadManager.clearCompleted()
+                            } label: {
+                                Label("Tamamlananlari Temizle", systemImage: "checkmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .foregroundColor(Color("AccentColor"))
+                        }
+                    }
+                }
+            }
+            .alert("Tumu Temizle", isPresented: $showClearAlert) {
+                Button("Temizle", role: .destructive) {
+                    downloadManager.clearAll()
+                }
+                Button("Iptal", role: .cancel) {}
+            } message: {
+                Text("Tum indirmeler silinecek. Emin misiniz?")
+            }
             .fullScreenCover(item: $selectedItem) { item in
                 OfflinePlayerView(item: item)
             }
@@ -54,6 +87,7 @@ struct DownloadsView: View {
 
 struct DownloadRow: View {
     let item: DownloadItem
+    var onCancel: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -78,9 +112,20 @@ struct DownloadRow: View {
                 case .downloading:
                     ProgressView(value: item.progress)
                         .tint(Color("AccentColor"))
-                    Text("\(Int(item.progress * 100))%")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                    HStack {
+                        Text("\(Int(item.progress * 100))%")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Spacer()
+                        // Cancel button
+                        Button {
+                            onCancel?()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.red.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 case .completed:
                     HStack(spacing: 8) {
                         Text(item.fileSizeText)
