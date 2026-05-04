@@ -16,17 +16,6 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Build
-        run: |
-          xcodebuild clean build \
-            -project PlayIMDB/PlayIMDB.xcodeproj \
-            -scheme PlayIMDB \
-            -destination 'generic/platform=iOS' \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
       - name: Archive
         run: |
           xcodebuild archive \
@@ -38,44 +27,18 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Create ExportOptions.plist
+      - name: Create unsigned IPA from archive
         run: |
-          cat > build/ExportOptions.plist << 'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>ad-hoc</string>
-              <key>thinning</key>
-              <string>&lt;none&gt;</string>
-              <key>compileBitcode</key>
-              <false/>
-          </dict>
-          </plist>
-          PLIST
-
-      - name: Export IPA
-        continue-on-error: true
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath build/PlayIMDB.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist build/ExportOptions.plist \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Upload Archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: PlayIMDB-archive
-          path: build/PlayIMDB.xcarchive
+          mkdir -p build/ipa/Payload
+          cp -r build/PlayIMDB.xcarchive/Products/Applications/PlayIMDB.app build/ipa/Payload/
+          cd build/ipa
+          zip -r ../PlayIMDB.ipa Payload
+          cd ../..
+          echo "IPA created successfully"
+          ls -la build/PlayIMDB.ipa
 
       - name: Upload IPA
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: PlayIMDB-ipa
-          path: build/ipa/*.ipa
-          if-no-files-found: ignore
+          name: PlayIMDB-unsigned
+          path: build/PlayIMDB.ipa
